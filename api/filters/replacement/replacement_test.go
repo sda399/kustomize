@@ -2865,6 +2865,93 @@ spec:
       - image: custom/postgres:1.9.0
         name: postgresdb
 `,
+		}, "replace with static object": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- sourceValue: |-
+    name: cache-volume
+    emptyDir:
+      sizeLimit: 500Mi
+      medium: Memory
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.volumes.[f=.]
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: postgres:1.8.0
+        name: postgresdb
+      volumes:
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 500Mi
+          medium: Memory
+`,
+		}, "replace with static multiple": {
+			input: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: postgres:1.8.0
+        name: postgresdb
+`,
+			replacements: `replacements:
+- sourceValue: 2
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.replicas
+    options:
+      create: true
+- sourceValue: custom/db
+  targets:
+  - select:
+      kind: Deployment
+      name: deploy
+    fieldPaths:
+    - spec.template.spec.containers.*.image
+    options:
+      create: true
+`,
+			expected: `apiVersion: v1
+kind: Deployment
+metadata:
+  name: deploy
+spec:
+  template:
+    spec:
+      containers:
+      - image: custom/db
+        name: postgresdb
+      replicas: 2
+`,
 		}, "source value and selector error": {
 			input: `apiVersion: v1
 kind: Deployment

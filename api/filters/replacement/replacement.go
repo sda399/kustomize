@@ -43,7 +43,7 @@ func getReplacement(nodes []*yaml.RNode, r *types.Replacement) (*yaml.RNode, err
 		return nil, fmt.Errorf("value and resource selectors are mutually exclusive")
 	}
 	if r.SourceValue != nil {
-		return yaml.NewScalarRNode(*r.SourceValue), nil
+		return yaml.Parse(*r.SourceValue)
 	}
 
 	source, err := selectSourceNode(nodes, r.Source)
